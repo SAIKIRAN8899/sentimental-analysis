@@ -9,7 +9,7 @@ import torch.nn.functional as F
 def load_model():
     model_name = "cardiffnlp/twitter-roberta-base-sentiment"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, trust_remote_code=True)
     return tokenizer, model
 
 
