@@ -4,10 +4,6 @@ import torch
 import torch.nn.functional as F
 import os
 
-# Show working directory and available files for debugging
-st.write("🗂️ Working directory:", os.getcwd())
-st.write("📁 Files in directory:", os.listdir())
-
 # Load model and tokenizer only once using caching
 @st.cache_resource
 def load_model():
