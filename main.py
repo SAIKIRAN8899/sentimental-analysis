@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
 
-# Load model and tokenizer only once using caching
+# Load model and tokenizer once using caching
 @st.cache_resource
 def load_model():
     model_name = "distilbert-base-uncased-finetuned-sst-2-english"
@@ -18,7 +18,7 @@ def predict_sentiment(text, tokenizer, model):
         outputs = model(**inputs)
         probs = F.softmax(outputs.logits, dim=-1)[0]
 
-    labels = ['Negative', 'Positive']  # Only 2 classes for this model
+    labels = ['Negative', 'Positive']  # This model has two labels
     confidence_scores = {label: float(probs[i]) for i, label in enumerate(labels)}
     predicted_label = labels[torch.argmax(probs)]
 
@@ -26,8 +26,8 @@ def predict_sentiment(text, tokenizer, model):
 
 # Streamlit UI
 st.set_page_config(page_title="Sentiment Analyzer", layout="centered")
-st.title("💬 Sentiment Analysis with BERT Transformers")
-st.write("Analyze the sentiment of any text (Positive or Negative) using a pretrained BERT model.")
+st.title("💬 Sentiment Analysis with DistilBERT")
+st.write("Analyze the sentiment of any text (Positive or Negative) using a pretrained DistilBERT model.")
 
 # User input
 text = st.text_area("Enter text:", height=150)
