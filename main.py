@@ -2,16 +2,28 @@ import streamlit as st
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
+import os
 
+# Show working directory and available files for debugging
+st.write("🗂️ Working directory:", os.getcwd())
+st.write("📁 Files in directory:", os.listdir())
 
 # Load model and tokenizer only once using caching
 @st.cache_resource
 def load_model():
     model_name = "cardiffnlp/twitter-roberta-base-sentiment"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, trust_remote_code=True)
-    return tokenizer, model
 
+    # If local model exists, load from there (for Streamlit Cloud deployments)
+    if os.path.exists("model"):
+        st.write("✅ Loading model from local 'model/' folder.")
+        tokenizer = AutoTokenizer.from_pretrained("model")
+        model = AutoModelForSequenceClassification.from_pretrained("model")
+    else:
+        st.write("🌐 Downloading model from Hugging Face Hub.")
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForSequenceClassification.from_pretrained(model_name, trust_remote_code=True)
+
+    return tokenizer, model
 
 # Preprocessing and inference
 def predict_sentiment(text, tokenizer, model):
@@ -25,7 +37,6 @@ def predict_sentiment(text, tokenizer, model):
     predicted_label = labels[torch.argmax(probs)]
 
     return predicted_label, confidence_scores
-
 
 # Streamlit UI
 st.set_page_config(page_title="Sentiment Analyzer", layout="centered")
