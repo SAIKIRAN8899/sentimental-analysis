@@ -1,3 +1,4 @@
 transformers
 torch
 streamlit
+sentencepiece==0.1.99
