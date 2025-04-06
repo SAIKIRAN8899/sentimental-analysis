@@ -7,7 +7,7 @@ import torch.nn.functional as F
 # Load model and tokenizer only once using caching
 @st.cache_resource
 def load_model():
-    model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+    model_name = "distilbert-base-uncased-finetuned-sst-2-english"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
     return tokenizer, model
