@@ -3,45 +3,42 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
 
+# Use a more lightweight and stable model
+MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
 
-# Load model and tokenizer only once using caching
+# Load model and tokenizer with caching
 @st.cache_resource
 def load_model():
-    model_name = "cardiffnlp/twitter-roberta-base-sentiment"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
     return tokenizer, model
 
-
-# Preprocessing and inference
+# Predict sentiment
 def predict_sentiment(text, tokenizer, model):
-    inputs = tokenizer(text, return_tensors="pt", truncation=True)
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
         probs = F.softmax(outputs.logits, dim=-1)[0]
 
-    labels = ['Negative', 'Neutral', 'Positive']
-    confidence_scores = {label: float(probs[i]) for i, label in enumerate(labels)}
-    predicted_label = labels[torch.argmax(probs)]
-
-    return predicted_label, confidence_scores
+    labels = ['Negative', 'Positive']
+    predicted = torch.argmax(probs).item()
+    confidence = {labels[i]: float(probs[i]) for i in range(len(labels))}
+    return labels[predicted], confidence
 
 # Streamlit UI
-st.set_page_config(page_title="Sentiment Analyzer", layout="centered")
-st.title("💬 Sentiment Analysis with BERT Transformers ")
-st.write("Analyze the sentiment of any text (Positive, Neutral, or Negative) using a pretrained BERT model.")
+st.set_page_config(page_title="Sentiment Analysis", layout="centered")
+st.title("💬 Sentiment Analysis with DistilBERT")
+st.write("Check the sentiment of your message (Positive or Negative).")
 
-# User input
-text = st.text_area("Enter text:", height=150)
+text_input = st.text_area("Enter your message:")
 
-if st.button("Analyze Sentiment"):
-    if not text.strip():
+if st.button("Analyze"):
+    if not text_input.strip():
         st.warning("Please enter some text.")
     else:
         tokenizer, model = load_model()
-        label, scores = predict_sentiment(text, tokenizer, model)
+        label, confidence = predict_sentiment(text_input, tokenizer, model)
 
-        st.subheader("🔍 Sentiment Result")
-        st.markdown(f"**Predicted Sentiment:** {label}")
-        st.subheader("📊 Confidence Scores")
-        st.write({k: f"{v * 100:.2f}%" for k, v in scores.items()})
+        st.success(f"**Sentiment:** {label}")
+        st.subheader("Confidence Scores")
+        st.write({k: f"{v * 100:.2f}%" for k, v in confidence.items()})
