@@ -2,16 +2,14 @@ import streamlit as st
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
-import os
 
 # Load model and tokenizer only once using caching
 @st.cache_resource
 def load_model():
-    model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+    model_name = "distilbert-base-uncased-finetuned-sst-2-english"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
     return tokenizer, model
-
 
 # Preprocessing and inference
 def predict_sentiment(text, tokenizer, model):
@@ -20,7 +18,7 @@ def predict_sentiment(text, tokenizer, model):
         outputs = model(**inputs)
         probs = F.softmax(outputs.logits, dim=-1)[0]
 
-    labels = ['Negative', 'Neutral', 'Positive']
+    labels = ['Negative', 'Positive']  # Only 2 classes for this model
     confidence_scores = {label: float(probs[i]) for i, label in enumerate(labels)}
     predicted_label = labels[torch.argmax(probs)]
 
@@ -28,8 +26,8 @@ def predict_sentiment(text, tokenizer, model):
 
 # Streamlit UI
 st.set_page_config(page_title="Sentiment Analyzer", layout="centered")
-st.title("💬 Sentiment Analysis with BERT Transformers ")
-st.write("Analyze the sentiment of any text (Positive, Neutral, or Negative) using a pretrained BERT model.")
+st.title("💬 Sentiment Analysis with BERT Transformers")
+st.write("Analyze the sentiment of any text (Positive or Negative) using a pretrained BERT model.")
 
 # User input
 text = st.text_area("Enter text:", height=150)
