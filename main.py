@@ -3,33 +3,38 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
 
-# Load model and tokenizer using Streamlit cache
+
+# Load model and tokenizer only once using caching
 @st.cache_resource
 def load_model():
-    model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+    model_name = "cardiffnlp/twitter-roberta-base-sentiment"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
     return tokenizer, model
 
-# Prediction logic
+
+# Preprocessing and inference
 def predict_sentiment(text, tokenizer, model):
     inputs = tokenizer(text, return_tensors="pt", truncation=True)
     with torch.no_grad():
         outputs = model(**inputs)
         probs = F.softmax(outputs.logits, dim=-1)[0]
-    labels = ["Negative", "Positive"]
+
+    labels = ['Negative', 'Neutral', 'Positive']
     confidence_scores = {label: float(probs[i]) for i, label in enumerate(labels)}
     predicted_label = labels[torch.argmax(probs)]
+
     return predicted_label, confidence_scores
 
 # Streamlit UI
 st.set_page_config(page_title="Sentiment Analyzer", layout="centered")
-st.title("💬 Sentiment Analysis (DistilBERT)")
-st.write("Analyze the sentiment of your text using a reliable pretrained model (SST-2).")
+st.title("💬 Sentiment Analysis with BERT Transformers ")
+st.write("Analyze the sentiment of any text (Positive, Neutral, or Negative) using a pretrained BERT model.")
 
-text = st.text_area("Enter your text here:", height=150)
+# User input
+text = st.text_area("Enter text:", height=150)
 
-if st.button("Analyze"):
+if st.button("Analyze Sentiment"):
     if not text.strip():
         st.warning("Please enter some text.")
     else:
@@ -38,6 +43,5 @@ if st.button("Analyze"):
 
         st.subheader("🔍 Sentiment Result")
         st.markdown(f"**Predicted Sentiment:** {label}")
-
         st.subheader("📊 Confidence Scores")
         st.write({k: f"{v * 100:.2f}%" for k, v in scores.items()})
